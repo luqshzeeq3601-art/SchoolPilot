@@ -1,0 +1,57 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        schoolpilot: {
+          bg: '#FFFFFF',
+          surface: '#F7F3EE',
+          surfaceLight: '#FDFBF9',
+          surfaceTab: '#FAF7F3',
+          border: '#E7E2DC',
+          borderLight: '#F0EBE5',
+          borderInput: '#D7BDA3',
+          borderHover: '#D7BA9C',
+          textMain: '#101A2E',
+          textMuted: '#64748B',
+          accent: '#A66F36',
+          accentHover: '#8D592B',
+          accentDark: '#8C592B',
+          accentBadge: '#95602E',
+          accentLight: '#F5EDE4',
+          sparkle: '#E49B24',
+        },
+        schoolops: {
+          bg: '#FFFFFF',
+          surface: '#F7F3EE',
+          surfaceLight: '#FDFBF9',
+          surfaceTab: '#FAF7F3',
+          border: '#E7E2DC',
+          borderLight: '#F0EBE5',
+          borderInput: '#D7BDA3',
+          borderHover: '#D7BA9C',
+          textMain: '#101A2E',
+          textMuted: '#64748B',
+          accent: '#A66F36',
+          accentHover: '#8D592B',
+          accentDark: '#8C592B',
+          accentBadge: '#95602E',
+          accentLight: '#F5EDE4',
+          sparkle: '#E49B24',
+        },
+      },
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', 'Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+        script: ['"Caveat"', 'cursive'],
+        display: ['"Plus Jakarta Sans"', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+      },
+    },
+  },
+  plugins: [],
+};

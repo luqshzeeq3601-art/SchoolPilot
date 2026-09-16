@@ -1,0 +1,63 @@
+{
+  "name": "SchoolPilot - Leave Request Approval Routing",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "leave-approval",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract and validate incoming payload\nconst payload = $input.item.json.body || $input.item.json;\n\nif (!payload.leave_id || !payload.teacher_email) {\n  throw new Error('Missing essential leave parameters.');\n}\n\n// Determine department approver\nlet approverEmail = 'admin@cempaka.edu.my';\nlet approverRole = 'School Administrator';\n\nif (payload.department === 'Science & Mathematics') {\n  approverEmail = 'hod.science@cempaka.edu.my';\n  approverRole = 'Head of Department (Science & Math)';\n} else if (payload.department === 'Humanities & Languages') {\n  approverEmail = 'hod.humanities@cempaka.edu.my';\n  approverRole = 'Head of Department (Humanities)';\n}\n\nreturn {\n  json: {\n    leave_id: payload.leave_id,\n    teacher_name: payload.teacher_name,\n    teacher_email: payload.teacher_email,\n    department: payload.department,\n    leave_type: payload.leave_type,\n    start_date: payload.start_date,\n    end_date: payload.end_date,\n    reason: payload.reason,\n    covering_teacher: payload.covering_teacher || 'To be assigned by HoD',\n    approver_email: approverEmail,\n    approver_role: approverRole,\n    notification_status: 'dispatched',\n    routed_at: new Date().toISOString()\n  }\n};\n"
+      },
+      "id": "2",
+      "name": "Validate & Route Approver",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {}
+      },
+      "id": "3",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [660, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validate & Route Approver",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Route Approver": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

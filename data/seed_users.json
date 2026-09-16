@@ -1,0 +1,50 @@
+[
+  {
+    "email": "admin@cempaka.edu.my",
+    "password": "Password123!",
+    "full_name": "Puan Hajah Zaleha binti Mansor",
+    "role": "admin",
+    "department": "School Operations",
+    "is_active": true
+  },
+  {
+    "email": "hod.science@cempaka.edu.my",
+    "password": "Password123!",
+    "full_name": "Dr. Ramesh Krishnan",
+    "role": "hod",
+    "department": "Science & Mathematics",
+    "is_active": true
+  },
+  {
+    "email": "hod.humanities@cempaka.edu.my",
+    "password": "Password123!",
+    "full_name": "Mrs. Catherine Wong",
+    "role": "hod",
+    "department": "Humanities & Languages",
+    "is_active": true
+  },
+  {
+    "email": "teacher.azman@cempaka.edu.my",
+    "password": "Password123!",
+    "full_name": "Cikgu Azman bin Razali",
+    "role": "teacher",
+    "department": "Science & Mathematics",
+    "is_active": true
+  },
+  {
+    "email": "teacher.lee@cempaka.edu.my",
+    "password": "Password123!",
+    "full_name": "Mr. Lee Wei Hong",
+    "role": "teacher",
+    "department": "Science & Mathematics",
+    "is_active": true
+  },
+  {
+    "email": "teacher.priya@cempaka.edu.my",
+    "password": "Password123!",
+    "full_name": "Ms. Priya Nair",
+    "role": "teacher",
+    "department": "Humanities & Languages",
+    "is_active": true
+  }
+]
