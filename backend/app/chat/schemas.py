@@ -1,6 +1,11 @@
 import uuid
 from typing import List, Optional, Literal
 from pydantic import BaseModel, Field
+from app.contracts.extraction import (
+    ExtractionValidationStatus,
+    ExtractionValidationError,
+    ExtractionValidationResult,
+)
 
 
 class Citation(BaseModel):
@@ -37,6 +42,9 @@ class IntentClassification(BaseModel):
     extracted_fields: Optional[LeaveFields] = Field(
         None, description="Leave attributes extracted if intent is leave_request"
     )
+    extraction_validation: Optional[ExtractionValidationResult] = Field(
+        None, description="Validation disposition for extracted fields"
+    )
 
 
 class PolicyRAGResponse(BaseModel):
@@ -69,4 +77,5 @@ class ChatQueryResponse(BaseModel):
     relevant_policies: List[str]
     intent: Literal["info_query", "leave_request"]
     detected_leave_fields: Optional[LeaveFields] = None
+    extraction_validation: Optional[ExtractionValidationResult] = None
     orchestration_mode: Literal["n8n_primary", "direct_api_fallback", "direct_api", "direct_api_with_attachment"]

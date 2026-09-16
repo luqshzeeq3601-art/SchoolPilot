@@ -376,10 +376,13 @@ Or upload any `.pdf`, `.docx`, or `.md` file directly via the **Documents** tab 
 
 ## 🧪 Testing & Verification
 
-Run the automated test suite across backend unit tests, RBAC security gates, and integration suites:
+Run the automated test suite across backend unit tests, Alembic migration verification, workflow guardrail validation, and frontend builds:
 
 ```bash
-# Run backend pytest suite (33 tests across 6 modules)
+# Validate n8n workflow JSON structure and security guardrails
+python backend/scripts/validate_workflows.py
+
+# Run backend pytest suite (83+ tests across 14 modules)
 $env:PYTHONPATH="backend"; pytest backend/tests -v
 
 # Run frontend build & type check
@@ -399,6 +402,9 @@ Key architectural decisions are documented in `docs/decisions/`:
 - [ADR-001: Hybrid Orchestration (n8n Webhooks with FastAPI Fallback)](docs/decisions/ADR-001-hybrid-n8n-orchestration.md)
 - [ADR-002: Local Self-Hosted AI Infrastructure (Ollama + pgvector HNSW)](docs/decisions/ADR-002-self-hosted-local-ai.md)
 - [ADR-003: Role-Based Access Control and Immutable Audit Logging](docs/decisions/ADR-003-rbac-and-audit-trail.md)
+- [ADR-004: Resilience, Sub-Workflows, and Error Alerting](docs/decisions/ADR-004-resilience-subworkflows-and-error-alerts.md)
+- [ADR-005: Mock HRIS Payroll API, Entitlements, and Idempotency](docs/decisions/ADR-005-mock-hris-payroll-and-idempotency.md)
+- [ADR-006: Database Migrations with Alembic and Automated CI Quality Gates](docs/decisions/ADR-006-alembic-migrations-and-ci-gates.md)
 
 See [docs/architecture.md](docs/architecture.md) for the in-depth system architecture specification.
 

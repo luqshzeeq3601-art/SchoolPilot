@@ -1,5 +1,6 @@
 from typing import Optional, Dict, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from app.contracts.events import LeaveApprovalEventType, WorkflowErrorAlertPayload
 
 
 class N8nChatPayload(BaseModel):
@@ -11,6 +12,7 @@ class N8nChatPayload(BaseModel):
 
 
 class N8nLeaveApprovalPayload(BaseModel):
+    event_type: str = Field(default=LeaveApprovalEventType.LEAVE_SUBMITTED.value, description="Lifecycle event type")
     leave_id: str
     teacher_id: str
     teacher_name: str
@@ -22,3 +24,4 @@ class N8nLeaveApprovalPayload(BaseModel):
     reason: str
     covering_teacher: Optional[str] = None
     submitted_at: str
+

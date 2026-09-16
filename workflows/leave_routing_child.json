@@ -1,0 +1,40 @@
+{
+  "name": "SchoolPilot - Subworkflow Leave Approver Routing",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "1",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract incoming leave payload\nconst payload = $input.item.json.body || $input.item.json;\n\nif (!payload.leave_id || !payload.teacher_email) {\n  throw new Error('Missing essential leave parameters (leave_id, teacher_email).');\n}\n\n// Determine department approver\nlet approverEmail = 'admin@cempaka.edu.my';\nlet approverRole = 'School Administrator';\n\nif (payload.department === 'Science & Mathematics') {\n  approverEmail = 'hod.science@cempaka.edu.my';\n  approverRole = 'Head of Department (Science & Math)';\n} else if (payload.department === 'Humanities & Languages') {\n  approverEmail = 'hod.humanities@cempaka.edu.my';\n  approverRole = 'Head of Department (Humanities)';\n}\n\nreturn {\n  json: {\n    leave_id: payload.leave_id,\n    teacher_name: payload.teacher_name,\n    teacher_email: payload.teacher_email,\n    department: payload.department,\n    leave_type: payload.leave_type,\n    start_date: payload.start_date,\n    end_date: payload.end_date,\n    reason: payload.reason,\n    covering_teacher: payload.covering_teacher || 'To be assigned by HoD',\n    approver_email: approverEmail,\n    approver_role: approverRole,\n    notification_status: 'dispatched',\n    routed_at: new Date().toISOString()\n  }\n};\n"
+      },
+      "id": "2",
+      "name": "Validate & Route Approver",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 300]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validate & Route Approver",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveExecutionProgress": true,
+    "errorWorkflow": "ErrAlert00000001"
+  }
+}

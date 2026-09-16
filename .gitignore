@@ -63,3 +63,10 @@ backend/uploads/
 .DS_Store
 Thumbs.db
 e2e_matrix_results.json
+
+# Internal dev scripts, ideation, and workflows
+scripts/
+futurework/
+docs/ideas/
+.github/
+

@@ -26,6 +26,18 @@ export interface LeaveFields {
   covering_teacher?: string;
 }
 
+export interface ExtractionValidationError {
+  field: string;
+  code: string;
+  message: string;
+}
+
+export interface ExtractionValidationResult {
+  status: 'valid' | 'needs_clarification' | 'invalid';
+  missing_fields: string[];
+  errors: ExtractionValidationError[];
+}
+
 export interface ChatResponse {
   query: string;
   answer: string;
@@ -34,6 +46,7 @@ export interface ChatResponse {
   relevant_policies: string[];
   intent: 'info_query' | 'leave_request';
   detected_leave_fields?: LeaveFields;
+  extraction_validation?: ExtractionValidationResult;
   orchestration_mode: 'n8n_primary' | 'direct_api_fallback' | 'direct_api' | 'direct_api_with_attachment';
 }
 

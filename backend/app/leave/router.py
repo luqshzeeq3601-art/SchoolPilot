@@ -19,6 +19,7 @@ from app.leave.schemas import (
 from app.auth.dependencies import get_current_user, require_roles, verify_n8n_webhook_auth
 from app.n8n.client import trigger_n8n_leave_approval
 from app.n8n.schemas import N8nLeaveApprovalPayload
+from app.contracts.events import LeaveApprovalEventType
 from app.audit.logger import log_audit_event
 from app.audit.models import AuditAction
 
@@ -192,8 +193,34 @@ async def approve_leave_request(
         details={"status": "approved", "notes": leave_rec.review_notes},
     )
     await db.commit()
-    await db.refresh(leave_rec)
-    return build_leave_response(leave_rec)
+
+    # Re-fetch with relationships loaded
+    reload_stmt = (
+        select(LeaveRequest)
+        .options(selectinload(LeaveRequest.teacher), selectinload(LeaveRequest.reviewer))
+        .where(LeaveRequest.id == leave_id)
+    )
+    reloaded = (await db.execute(reload_stmt)).scalar_one()
+
+    # Trigger n8n leave approved event (for subworkflow HRIS payroll sync) after DB commit
+    teacher = reloaded.teacher
+    n8n_payload = N8nLeaveApprovalPayload(
+        event_type=LeaveApprovalEventType.LEAVE_APPROVED.value,
+        leave_id=str(reloaded.id),
+        teacher_id=str(reloaded.teacher_id),
+        teacher_name=teacher.full_name if teacher else "Unknown",
+        teacher_email=teacher.email if teacher else "unknown@school.edu",
+        department=teacher.department if teacher else "General",
+        leave_type=reloaded.leave_type.value,
+        start_date=reloaded.start_date.isoformat(),
+        end_date=reloaded.end_date.isoformat(),
+        reason=reloaded.reason,
+        covering_teacher=reloaded.covering_teacher,
+        submitted_at=reloaded.submitted_at.isoformat(),
+    )
+    await trigger_n8n_leave_approval(n8n_payload)
+
+    return build_leave_response(reloaded)
 
 
 @router.patch("/{leave_id}/reject", response_model=LeaveResponse)

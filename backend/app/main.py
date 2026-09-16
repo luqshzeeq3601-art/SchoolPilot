@@ -16,6 +16,7 @@ from app.chat.router import router as chat_router
 from app.leave.router import router as leave_router
 from app.audit.router import router as audit_router
 from app.system.router import router as system_router
+from app.mock_hris.router import router as mock_hris_router
 
 
 async def seed_initial_users():
@@ -81,7 +82,7 @@ app.add_middleware(
     allow_origins=settings.cors_origin_list,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-N8N-API-KEY", "X-API-Key", "X-User-Email"],
+    allow_headers=["Authorization", "Content-Type", "X-N8N-API-KEY", "X-API-Key", "X-User-Email", "Idempotency-Key"],
 )
 
 
@@ -108,6 +109,7 @@ app.include_router(chat_router, prefix=prefix)
 app.include_router(leave_router, prefix=prefix)
 app.include_router(audit_router, prefix=prefix)
 app.include_router(system_router, prefix=prefix)
+app.include_router(mock_hris_router, prefix=prefix)
 
 
 @app.get("/health", tags=["Health"])

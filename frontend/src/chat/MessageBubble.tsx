@@ -173,14 +173,30 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
                 Confidence: <span className="capitalize font-bold">{payload.confidence}</span>
               </span>
 
-              {/* Intent detected */}
+              {/* Intent detected & Validation Status */}
               {payload.intent === 'leave_request' && (
                 <span className="inline-flex items-center gap-1.5 px-3 xl:px-3.5 py-1 xl:py-1.5 rounded-full font-semibold bg-[#F5EDE4] text-[#8C592B] border border-[#EADBCC] text-xs xl:text-[13px]">
                   <Sparkles className="h-3.5 w-3.5 xl:h-4 xl:w-4 text-[#8C592B]" />
-                  Leave Request Detected
+                  {payload.extraction_validation?.status === 'needs_clarification'
+                    ? 'Leave Details Incomplete'
+                    : 'Leave Request Ready'}
                 </span>
               )}
             </div>
+
+            {/* Field clarification notice */}
+            {payload.intent === 'leave_request' && payload.extraction_validation?.status === 'needs_clarification' && payload.extraction_validation.errors.length > 0 && !message.leaveSubmitted && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-xs text-amber-900 space-y-1">
+                <p className="font-bold flex items-center gap-1.5 text-amber-800">
+                  <span>ℹ️</span> Please review or fill in the remaining details:
+                </p>
+                <ul className="list-disc list-inside space-y-0.5 text-amber-700 pl-1">
+                  {payload.extraction_validation.errors.map((err, errIdx) => (
+                    <li key={errIdx}>{err.message}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Citations list */}
             {payload.citations && payload.citations.length > 0 && (

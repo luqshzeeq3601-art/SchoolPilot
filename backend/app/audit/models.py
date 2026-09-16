@@ -18,6 +18,7 @@ class AuditAction(str, enum.Enum):
     LEAVE_DELETED = "leave_deleted"
     N8N_WORKFLOW_TRIGGERED = "n8n_workflow_triggered"
     N8N_WORKFLOW_CALLBACK = "n8n_workflow_callback"
+    MOCK_HRIS_SYNC = "mock_hris_sync"
 
 
 class AuditLog(Base):

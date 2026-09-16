@@ -96,6 +96,7 @@ async def handle_chat_query(
         relevant_policies=relevant_policies,
         intent=intent_result.intent,
         detected_leave_fields=intent_result.extracted_fields,
+        extraction_validation=intent_result.extraction_validation,
         orchestration_mode=orchestration_mode,
     )
 
@@ -173,5 +174,6 @@ async def handle_chat_query_with_file(
         relevant_policies=rag_response.relevant_policies,
         intent=intent_result.intent,
         detected_leave_fields=intent_result.extracted_fields,
+        extraction_validation=intent_result.extraction_validation,
         orchestration_mode=orchestration_mode,
     )

@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, date, timezone
 import enum
-from sqlalchemy import String, Date, DateTime, Enum, ForeignKey, Text
+from sqlalchemy import String, Date, DateTime, Enum, ForeignKey, Text, CheckConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
@@ -64,3 +64,8 @@ class LeaveRequest(Base):
     # Relationships
     teacher: Mapped["User"] = relationship("User", foreign_keys=[teacher_id])
     reviewer: Mapped["User"] = relationship("User", foreign_keys=[reviewed_by])
+
+    __table_args__ = (
+        CheckConstraint("end_date >= start_date", name="ck_leave_requests_date_order"),
+        CheckConstraint("length(reason) >= 5 AND length(reason) <= 1000", name="ck_leave_requests_reason_len"),
+    )

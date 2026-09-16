@@ -1,0 +1,81 @@
+{
+  "name": "SchoolPilot - Subworkflow HRIS Payroll Sync",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "1",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calculate inclusive Monday-Friday working days\nconst payload = $input.item.json.body || $input.item.json;\nconst startDateStr = payload.start_date;\nconst endDateStr = payload.end_date;\n\nif (!startDateStr || !endDateStr) {\n  throw new Error('start_date and end_date are required for working day calculation.');\n}\n\nconst start = new Date(startDateStr + 'T00:00:00Z');\nconst end = new Date(endDateStr + 'T00:00:00Z');\n\nif (isNaN(start.getTime()) || isNaN(end.getTime())) {\n  throw new Error('Invalid date format for working day calculation. Expected YYYY-MM-DD.');\n}\n\nif (end < start) {\n  throw new Error('end_date cannot be earlier than start_date.');\n}\n\nlet workingDays = 0;\nconst current = new Date(start);\n\nwhile (current <= end) {\n  const dayOfWeek = current.getUTCDay(); // 0 is Sunday, 6 is Saturday\n  if (dayOfWeek !== 0 && dayOfWeek !== 6) {\n    workingDays++;\n  }\n  current.setUTCDate(current.getUTCDate() + 1);\n}\n\nreturn {\n  json: {\n    ...payload,\n    net_working_days: workingDays,\n    calculated_at: new Date().toISOString()\n  }\n};\n"
+      },
+      "id": "2",
+      "name": "Calculate Working Days",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://fastapi:8000/api/v1/mock-hris/sync-payroll",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8N-API-KEY",
+              "value": "={{ $env.N8N_API_KEY || 'schoolops_n8n_secret_key_2026' }}"
+            },
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ 'mock-hris:payroll:v1:' + $json.leave_id }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ leave_id: $json.leave_id, net_working_days: $json.net_working_days, n8n_execution_id: $execution.id }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "3",
+      "name": "Sync Payroll with Mock HRIS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Calculate Working Days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Working Days": {
+      "main": [
+        [
+          {
+            "node": "Sync Payroll with Mock HRIS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveExecutionProgress": true,
+    "errorWorkflow": "ErrAlert00000001"
+  }
+}

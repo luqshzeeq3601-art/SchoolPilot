@@ -23,7 +23,7 @@
           "parameters": [
             {
               "name": "X-N8N-API-KEY",
-              "value": "schoolops_n8n_secret_key_2026"
+              "value": "={{ $env.N8N_API_KEY || 'schoolops_n8n_secret_key_2026' }}"
             },
             {
               "name": "X-User-Email",
@@ -77,5 +77,8 @@
         ]
       ]
     }
+  },
+  "settings": {
+    "errorWorkflow": "ErrAlert00000001"
   }
 }

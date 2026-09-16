@@ -1,0 +1,74 @@
+{
+  "name": "SchoolPilot - Automated Error Alert & Telegram Notification",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "1",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract error details from n8n Error Trigger\nconst item = $input.item.json || {};\nconst execution = item.execution || {};\nconst workflow = item.workflow || {};\nconst error = execution.error || {};\n\nconst executionId = String(execution.id || item.executionId || 'unknown');\nconst workflowName = String(workflow.name || item.workflowName || 'Unknown Workflow');\nconst workflowId = String(workflow.id || item.workflowId || 'unknown');\nconst failedNode = String(execution.lastNodeExecuted || error.node?.name || item.node || 'Unknown Node');\nconst rawMessage = String(error.message || item.message || 'An unexpected automation error occurred.');\n\n// Sanitize error message - redact potential secrets, tokens, emails, medical or sensitive data\nlet sanitizedMessage = rawMessage\n  .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}/g, '[REDACTED_EMAIL]')\n  .replace(/(bearer|jwt|token|password|key|secret)\\s*[:=]\\s*[^\\s,;]+/gi, '$1: [REDACTED]')\n  .replace(/eyJ[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]*/g, '[REDACTED_JWT]');\n\n// Truncate message to avoid exceeding message limits or dumping stack traces\nif (sanitizedMessage.length > 250) {\n  sanitizedMessage = sanitizedMessage.substring(0, 247) + '...';\n}\n\nconst timestamp = new Date().toISOString();\n\n// Markdown formatted Telegram text (operational metadata only, no request body or medical data)\nconst formattedText = `🚨 *SchoolPilot Automation Alert*\\n• *Workflow*: \\`${workflowName}\\`\\n• *Failing Node*: \\`${failedNode}\\`\\n• *Execution ID*: \\`${executionId}\\`\\n• *Timestamp*: \\`${timestamp}\\`\\n• *Error*: ${sanitizedMessage}`;\n\nreturn {\n  json: {\n    alert_type: 'automation_error',\n    execution_id: executionId,\n    workflow_id: workflowId,\n    workflow_name: workflowName,\n    failed_node: failedNode,\n    sanitized_error: sanitizedMessage,\n    timestamp: timestamp,\n    formatted_message: formattedText\n  }\n};\n"
+      },
+      "id": "2",
+      "name": "Sanitize & Format Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $env.TELEGRAM_ALERT_CHAT_ID || '-1001234567890' }}",
+        "text": "={{ $json.formatted_message }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "3",
+      "name": "Send Telegram Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [680, 300],
+      "continueOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-alert-bot",
+          "name": "Telegram Alert Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Sanitize & Format Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanitize & Format Alert": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveExecutionProgress": true,
+    "errorWorkflow": null
+  }
+}

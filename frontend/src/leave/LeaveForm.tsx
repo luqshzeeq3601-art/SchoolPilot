@@ -13,12 +13,11 @@ export const LeaveForm: React.FC<LeaveFormProps> = ({
   onSuccess,
   onCancel,
 }) => {
-  const todayStr = new Date().toISOString().split('T')[0];
   const [leaveType, setLeaveType] = useState(
     initialFields?.leave_type?.toLowerCase() || 'emergency'
   );
-  const [startDate, setStartDate] = useState(initialFields?.start_date || todayStr);
-  const [endDate, setEndDate] = useState(initialFields?.end_date || todayStr);
+  const [startDate, setStartDate] = useState(initialFields?.start_date || '');
+  const [endDate, setEndDate] = useState(initialFields?.end_date || '');
   const [reason, setReason] = useState(initialFields?.reason || '');
   const [coveringTeacher, setCoveringTeacher] = useState(
     initialFields?.covering_teacher || ''

@@ -1,5 +1,5 @@
 {
-  "name": "SchoolPilot - Leave Request Approval Routing",
+  "name": "SchoolPilot - Leave Request Orchestration (Parent)",
   "nodes": [
     {
       "parameters": {
@@ -12,28 +12,57 @@
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [220, 300]
+      "position": [160, 300],
+      "webhookId": "leave-approval-hook-id"
     },
     {
       "parameters": {
-        "jsCode": "// Extract and validate incoming payload\nconst payload = $input.item.json.body || $input.item.json;\n\nif (!payload.leave_id || !payload.teacher_email) {\n  throw new Error('Missing essential leave parameters.');\n}\n\n// Determine department approver\nlet approverEmail = 'admin@cempaka.edu.my';\nlet approverRole = 'School Administrator';\n\nif (payload.department === 'Science & Mathematics') {\n  approverEmail = 'hod.science@cempaka.edu.my';\n  approverRole = 'Head of Department (Science & Math)';\n} else if (payload.department === 'Humanities & Languages') {\n  approverEmail = 'hod.humanities@cempaka.edu.my';\n  approverRole = 'Head of Department (Humanities)';\n}\n\nreturn {\n  json: {\n    leave_id: payload.leave_id,\n    teacher_name: payload.teacher_name,\n    teacher_email: payload.teacher_email,\n    department: payload.department,\n    leave_type: payload.leave_type,\n    start_date: payload.start_date,\n    end_date: payload.end_date,\n    reason: payload.reason,\n    covering_teacher: payload.covering_teacher || 'To be assigned by HoD',\n    approver_email: approverEmail,\n    approver_role: approverRole,\n    notification_status: 'dispatched',\n    routed_at: new Date().toISOString()\n  }\n};\n"
+        "jsCode": "// Inspect event_type with backward-compatible default\nconst payload = $input.item.json.body || $input.item.json;\nconst eventType = payload.event_type || 'leave_submitted';\n\nif (eventType === 'leave_submitted') {\n  return [\n    [{ json: payload }],\n    []\n  ];\n} else if (eventType === 'leave_approved') {\n  return [\n    [],\n    [{ json: payload }]\n  ];\n} else {\n  throw new Error(`Unsupported event_type '${eventType}'. Supported events: leave_submitted, leave_approved.`);\n}\n"
       },
       "id": "2",
-      "name": "Validate & Route Approver",
+      "name": "Route by Event Type",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [440, 300]
+      "position": [380, 300]
+    },
+    {
+      "parameters": {
+        "workflowId": "LeaveRoute00001",
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "3",
+      "name": "Execute Approver Routing Subworkflow",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [620, 200]
+    },
+    {
+      "parameters": {
+        "workflowId": "HrisSync0000001",
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "4",
+      "name": "Execute HRIS Sync Subworkflow",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [620, 420]
     },
     {
       "parameters": {
         "respondWith": "firstIncomingItem",
         "options": {}
       },
-      "id": "3",
+      "id": "5",
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [660, 300]
+      "position": [880, 300]
     }
   ],
   "connections": {
@@ -41,14 +70,43 @@
       "main": [
         [
           {
-            "node": "Validate & Route Approver",
+            "node": "Route by Event Type",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate & Route Approver": {
+    "Route by Event Type": {
+      "main": [
+        [
+          {
+            "node": "Execute Approver Routing Subworkflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute HRIS Sync Subworkflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Approver Routing Subworkflow": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute HRIS Sync Subworkflow": {
       "main": [
         [
           {
@@ -59,5 +117,9 @@
         ]
       ]
     }
+  },
+  "settings": {
+    "saveExecutionProgress": true,
+    "errorWorkflow": "ErrAlert00000001"
   }
 }
