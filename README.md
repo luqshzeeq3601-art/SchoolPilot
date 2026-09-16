@@ -46,69 +46,14 @@ Full data flow between all system components including request/response paths, a
 
 ---
 
-### Mermaid Technical Diagram
+### Technical Operations Architecture Diagram
 
-```mermaid
-flowchart TD
-    subgraph Client["Frontend Client (React 18 + Vite)"]
-        UI["Tailwind UI & Lucide Icons"]
-        AuthContext["Auth Context (JWT + RBAC)"]
-        UI --> AuthContext
-    end
+End-to-end data flow with color-coded pipelines: Client to API (HTTP), Document Ingestion, Hybrid n8n Orchestration, Local AI Inference, and Leave Workflow persistence:
 
-    subgraph API["Backend Gateway (FastAPI Python 3.12)"]
-        Router["REST Router (/api/v1)"]
-        AuthM["Security & RBAC Layer"]
-        Parser["Document Chunker & Parser<br/>(PDF, DOCX, MD, TXT)"]
-        Retriever["pgvector HNSW Cosine Search"]
-        Generator["Ollama LLM Client (JSON Schema)"]
-        AuditLog["Immutable Audit Logger"]
-    end
+![SchoolPilot Operations Platform — Technical Architecture Diagram showing Frontend Client (React 18 + Vite), Backend Gateway (FastAPI Python 3.12), Automation Engine (n8n Self-Hosted), Local AI Engine (Ollama nomic-embed-text + Qwen 2.5 / Llama 3.1), and Persistence & Vectors (PostgreSQL 16 + pgvector) with color-coded data flow arrows](docs/SchoolPilot%20Operations%20Architecture%20Diagram.png)
 
-    subgraph Automation["Automation Engine (n8n Self-Hosted)"]
-        ChatWf["RAG Chat Webhook<br/>(/webhook/chat-query)"]
-        LeaveWf["Leave Approval Routing<br/>(/webhook/leave-approval)"]
-    end
+*▲ Technical Operations Diagram: Complete data flow showing HTTP requests, document ingestion (upload → chunking → 768-dim embedding → pgvector), hybrid n8n webhook triggers with fallback, local Ollama LLM inference, and relational leave/audit persistence.*
 
-    subgraph Storage["Persistence & Vectors (PostgreSQL 16)"]
-        RelationalDB[("Relational DB<br/>users, leave_requests, audit_logs")]
-        VectorDB[("Vector Store<br/>documents, document_chunks (768-dim)")]
-    end
-
-    subgraph LocalAI["Local AI Engine (Ollama Host Daemon)"]
-        Embedder["nomic-embed-text<br/>(768 dimensions)"]
-        LLM["qwen2.5:7b / llama3.1:8b<br/>(Local GPU/CPU Inference)"]
-    end
-
-    %% Client communication
-    UI -->|HTTP / REST API| Router
-    Router --> AuthM
-    AuthM --> RelationalDB
-    Router --> AuditLog --> RelationalDB
-
-    %% Ingestion Flow
-    UI -->|Upload Policy Document| Parser
-    Parser -->|Batch Texts| Embedder
-    Embedder -->|768-dim Embeddings| VectorDB
-
-    %% Hybrid Orchestration Flow
-    UI -->|Primary: Query via Webhook| ChatWf
-    ChatWf -->|Authenticated POST| Router
-    UI -.->|Fallback: Direct API| Router
-
-    Router --> Retriever
-    Retriever -->|Cosine Similarity Query| VectorDB
-    VectorDB -->|Top K Excerpts + Metadata| Retriever
-    Retriever --> Generator
-    Generator -->|Prompt + Context| LLM
-    LLM -->|Cited JSON Response| Generator
-    Generator --> UI
-
-    %% Leave Workflow
-    UI -->|Submit Guided Leave| Router
-    Router --> LeaveWf
-    LeaveWf -->|Route HoD / Admin Approver| RelationalDB
-```
 
 ---
 
