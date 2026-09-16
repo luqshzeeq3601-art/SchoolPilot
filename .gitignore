@@ -62,3 +62,4 @@ backend/uploads/
 .idea/
 .DS_Store
 Thumbs.db
+e2e_matrix_results.json

@@ -26,7 +26,27 @@ School administrators and operations staff spend dozens of hours every week acti
 
 ## 🏛️ System Architecture
 
-SchoolPilot uses a decoupled, production-grade microservice architecture orchestrated via Docker Compose:
+### High-Level Architecture Overview
+
+The system uses a decoupled microservice architecture with 5 core layers — all self-hosted and orchestrated via Docker Compose:
+
+![System Architecture Flowchart — 5-layer technical flow showing Client Layer (React 18) → API Gateway (FastAPI) → Automation Engine (n8n) → AI Inference (Ollama) → Persistent Storage (PostgreSQL + pgvector)](docs/System%20Architecture%20Flowchart.png)
+
+*▲ End-to-end architecture: React Frontend → FastAPI Gateway → n8n Workflow Engine → Ollama Local AI → PostgreSQL + pgvector. Each layer is labelled with its key technologies and responsibilities.*
+
+---
+
+### Detailed Component Interaction Map
+
+Full data flow between all system components including request/response paths, authentication, and AI inference routing:
+
+![SchoolPilot AI System Architecture — Detailed component diagram showing React Frontend with Teacher/HoD/Admin roles, FastAPI Gateway with JWT Auth and Business Logic, n8n Automation with Leave Approval and RAG Orchestration workflows, Ollama AI with Qwen 2.5 LLM and nomic-embed-text, and PostgreSQL + pgvector for relational data and vector embeddings](docs/choolPilot%20AI%20System%20Architecture.png)
+
+*▲ Detailed interaction map: labeled request/response arrows between React Frontend, FastAPI Central API Router (JWT Auth, Request Routing, Business Logic), n8n Automation (Leave Approval, RAG Orchestration), Ollama AI (LLM & Embeddings), and PostgreSQL + pgvector (User Data, Leave Records, Audit Logs, Document Embeddings).*
+
+---
+
+### Mermaid Technical Diagram
 
 ```mermaid
 flowchart TD
@@ -92,6 +112,28 @@ flowchart TD
 
 ---
 
+## 🔄 How It Works
+
+### AI Knowledge Pipeline — From Documents to Answers
+
+This diagram shows the complete end-to-end RAG (Retrieval-Augmented Generation) pipeline: how school policy documents are ingested, chunked, embedded, stored, retrieved, and served back as grounded answers with citations.
+
+![SchoolPilot AI Knowledge Pipeline — 7-step flow: (1) Document Upload (PDF, DOCX, TXT) → (2) Text Chunking with metadata → (3) Vector Embedding via Ollama nomic-embed-text → (4) pgvector Storage in PostgreSQL → (5) Semantic Retrieval via similarity search → (6) FastAPI query processing and RAG orchestration → (7) React Web Dashboard with chat interface and document management](docs/SchoolPilot%20AI%20Knowledge%20Pipeline.png)
+
+*▲ RAG Pipeline: Documents are uploaded, chunked with heading metadata, embedded locally via Ollama (nomic-embed-text), stored in pgvector, and retrieved via cosine similarity to generate cited answers through the FastAPI backend.*
+
+---
+
+### Automated HR Leave Approval Workflow
+
+The leave approval process is fully automated in 5 steps — from natural language request to audit-logged completion:
+
+![Automated HR Leave Approval Workflow — 5-step flow: (1) Request — Employee submits leave request in chat via natural conversation → (2) AI Assist — AI Assistant verifies policy compliance via RAG, checks leave rules and handbook citations → (3) Validate — Automated validation and conflict check for overlaps and missing fields → (4) Approve — Approval routing to Head of Department for review → (5) Complete — Instant notification and PostgreSQL audit log update, fully tracked](docs/Automated%20HR%20Leave%20Approval%20Workflow.png)
+
+*▲ Leave Automation: From natural language chat request through AI policy verification, automated validation, department-based HoD routing, to immutable audit trail recording — all orchestrated via n8n.*
+
+---
+
 ## 🛠️ Technology Stack (Strict RM0 Cost)
 
 | Layer | Technology | Key Capabilities |
@@ -134,32 +176,174 @@ flowchart TD
 
 ---
 
-## 📸 Screenshots Showcase
+## 📸 Screenshots & User Guide
 
-### 1. Interactive Policy Assistant with Verbatim Citations
+### 🔐 Login & Authentication
+
+The login screen includes **Quick Switch** buttons for instant demo persona switching between Admin, HoD, and Teacher roles.
+
+![Login Screen — SchoolPilot authentication page with branded background, staff email and password fields, Quick Switch demo accounts for Admin (Pn. Zaleha), HoD (Dr. Ramesh), and Teacher (Cikgu Azman), and institutional footer](docs/screenshots/login-desktop.png)
+
+*▲ Desktop login page with institutional branding, password visibility toggle, and one-click Quick Switch demo accounts.*
+
+#### Login Error Handling
+
+Clear inline validation feedback when credentials are incorrect — no ambiguous error states:
+
+![Login Error State — Invalid email or password alert displayed in red banner above the form fields, with the invalid email shown in the input field](docs/screenshots/login-error-state.png)
+
+*▲ Error state: "Invalid email or password" banner shown with clear visual feedback and intact Quick Switch buttons for recovery.*
+
+---
+
+### 💬 Policy Assistant — AI-Powered Chat Interface
+
+#### Welcome Screen & Category Quick Start
+
+Staff are greeted with guided category cards (School Policies, Leave & Attendance, HR & Administration, Find a Regulation) and example prompts:
+
+![Chat Welcome — Interactive category cards with icons for School Policies, Leave & Attendance, HR & Administration, and Find a Regulation. Includes example prompt suggestions and a welcoming greeting from the SchoolPilot AI assistant](docs/screenshots/chat-welcome-desktop.png)
+
+*▲ Desktop chat welcome screen with categorized quick-start cards and conversational example prompts to guide first-time users.*
+
+#### RAG Grounded Response with Confidence & Citations
+
+Answers include a confidence badge and verbatim source citations. Click to expand the exact excerpt, document name, and page number:
+
 | RAG Grounded Answer & Confidence Badge | Expandable Source Quotations & Citations |
 |:---:|:---:|
-| ![Policy Assistant RAG Response](docs/screenshots/chat-rag-response.png) | ![Citation Expanded View](docs/screenshots/chat-citation-expanded.png) |
+| ![Policy Assistant response with confidence badge (High/Medium/Low) and cited answer referencing the Staff Operational Handbook](docs/screenshots/chat-rag-response.png) | ![Citation expanded view showing the exact verbatim quote, source document name, page number, and section title](docs/screenshots/chat-citation-expanded.png) |
+| *AI-generated answer with confidence level and source attribution* | *Expanded citation card with exact excerpt, document name, and page number* |
 
-### 2. Guided Action: Leave Intent Detection & Pre-filled Form
+#### n8n Workflow-Orchestrated Response
+
+When n8n is active, queries are routed through the visual automation engine for enhanced orchestration:
+
+![Chat response routed via n8n RAG workflow — answer generated through the n8n webhook pipeline with citation metadata returned from the automation engine](docs/screenshots/chat-n8n-response.png)
+
+*▲ Response orchestrated through n8n webhook: the query is sent to the automation engine, which calls FastAPI's vector retriever and returns a grounded answer with citations.*
+
+---
+
+### ⚡ Guided Leave Application — From Chat to Submission
+
+Teachers can request leave in natural language. The AI extracts leave details and auto-populates a structured form inline:
+
 | Natural Language Leave Extraction Form | Real-Time Submission Confirmation |
 |:---:|:---:|
-| ![Guided Leave Form](docs/screenshots/chat-leave-form.png) | ![Leave Submitted Badge](docs/screenshots/chat-leave-submitted-badge.png) |
+| ![Guided Leave Form — AI-extracted fields (leave type, dates, reason, covering teacher) pre-populated from natural language input, rendered as an editable inline form in the chat stream](docs/screenshots/chat-leave-form.png) | ![Leave Submitted Badge — Green success confirmation badge shown inline after leave request is submitted, with request ID and status](docs/screenshots/chat-leave-submitted-badge.png) |
+| *AI parses "I need emergency leave tomorrow, Mr. Lee will cover" into structured form fields* | *Instant submission confirmation with request ID and pending status badge* |
 
-### 3. Departmental Approvals & Administrative Console
-| HoD Departmental Review & Action Queue | Admin Console Metrics & System Health |
-|:---:|:---:|
-| ![HoD Leaves Dashboard](docs/screenshots/hod-leaves-dashboard.png) | ![Admin Dashboard](docs/screenshots/admin-dashboard.png) |
+---
 
-### 4. Document Repository & Immutable Audit Trail
-| Document Management & Vector Ingestion | Searchable Audit Trail with JSON Payload Inspector |
-|:---:|:---:|
-| ![Document Repository](docs/screenshots/documents.png) | ![Audit Trail](docs/screenshots/audit-logs.png) |
+### 📋 Leave Management — Role-Based Views
 
-### 5. Cross-Platform Mobile & Responsive Views
-| Mobile Welcome & Category Prompts | Responsive Staff Leave List |
+#### Teacher View: Personal Leave Tabs
+
+Teachers can filter their personal leave history by status — Pending and Approved tabs:
+
+| Pending Leave Requests | Approved Leave Requests |
 |:---:|:---:|
-| ![Mobile Policy Assistant](docs/screenshots/chat-welcome-mobile.png) | ![Mobile Leave List](docs/screenshots/leave-mobile-375x667.png) |
+| ![Leave Tab — Pending: list of teacher's submitted leave requests awaiting HoD review, showing leave type, dates, reason, and "Pending" status badge](docs/screenshots/leave-tab-pending.png) | ![Leave Tab — Approved: list of teacher's approved leave requests showing leave type, dates, reason, approver name, and "Approved" status badge](docs/screenshots/leave-tab-approved.png) |
+| *Teacher's pending leave queue awaiting department head review* | *Approved requests with approver name and decision timestamp* |
+
+#### Leave Detail Cards
+
+Detailed view of individual leave requests showing full metadata, status, and approval chain:
+
+| Pending Leave Detail | Approved Leave Detail |
+|:---:|:---:|
+| ![Leave Pending — Detailed view of a single pending leave request card showing leave type, dates, reason, covering teacher, and current "Pending" status](docs/screenshots/leave-pending.png) | ![Leave Approved — Detailed view of an approved leave request card showing leave type, dates, reason, covering teacher, approver name, remarks, and "Approved" status](docs/screenshots/leave-approved.png) |
+| *Full pending request detail with covering teacher and submission timestamp* | *Approved request showing HoD remarks and approval timestamp* |
+
+#### HoD View: Departmental Approval Queue
+
+Head of Department reviews pending requests from their department with approve/reject actions and remarks:
+
+| HoD Departmental Review Queue | Rejection Modal with Remarks |
+|:---:|:---:|
+| ![HoD Leaves Dashboard — Departmental queue showing all pending leave requests from teachers in the HoD's department, with Approve and Reject action buttons on each row](docs/screenshots/hod-leaves-dashboard.png) | ![Leave Reject Modal — Modal dialog for HoD to enter rejection reason/remarks before declining a leave request, with Cancel and Confirm Reject buttons](docs/screenshots/leave-reject-modal.png) |
+| *HoD sees only their department's pending requests with quick approve/reject* | *Rejection requires mandatory remarks — all decisions are audit-logged* |
+
+---
+
+### 🛠️ Admin Console — Operations Dashboard
+
+#### Administrative Overview & System Health
+
+The admin dashboard provides a unified command centre with key metrics, quick-access cards, and the system audit trail:
+
+![Admin Dashboard — Administrative Console showing Pending Approvals count, Indexed Documents count, pgvector Chunks count, Automations Engine connection status, quick-access cards for Staff Leave Management, Manage Documents, and Launch Policy Assistant, and the System Audit Trail & Compliance Log with searchable event filters](docs/screenshots/admin-dashboard.png)
+
+*▲ Full admin dashboard: KPI cards (pending approvals, indexed documents, pgvector chunks, n8n engine status), quick-action shortcuts, and the searchable audit trail with category filters.*
+
+#### Live Integration Status Monitor
+
+Real-time health checks for all system services — accessible from the admin dashboard via "View integration status":
+
+![Integration Status Modal — Live health status for FastAPI Backend (v1.0.0, UP), PostgreSQL + pgvector (16.2, 3ms, UP), Local Ollama (llama3:8b + nomic-embed-text, 12ms, UP), and n8n Workflows (Policy RAG Webhook + Leave Approval Dispatch, 18ms, UP). Shows webhook endpoint URLs with copy buttons and "Open n8n dashboard" link](docs/screenshots/admin-n8n-integration-status.png)
+
+*▲ Integration health modal: all four services showing UP with response latency, version info, model details, and n8n webhook endpoint URLs.*
+
+---
+
+### 📄 Document Management & Audit Trail
+
+#### Document Repository & Vector Ingestion
+
+Admins manage the institutional knowledge base — uploaded documents are chunked and embedded into pgvector:
+
+| Document Repository & Vector Status | Upload Success Confirmation |
+|:---:|:---:|
+| ![Document Repository — List of ingested policy documents showing document name, file type, upload date, chunk count, and vector embedding status](docs/screenshots/documents.png) | ![Document Upload Success — Green success notification confirming document was parsed, chunked, embedded, and indexed into pgvector](docs/screenshots/document-uploaded-success.png) |
+| *Repository listing with chunk counts and vector embedding status per document* | *Upload confirmation: document parsed, chunked, and embedded into pgvector* |
+
+#### Immutable Audit Trail & JSON Inspector
+
+Every system action is logged with actor metadata, timestamps, and JSON diffs — fully searchable:
+
+| Searchable Audit Trail | Audit Log JSON Inspector |
+|:---:|:---:|
+| ![Audit Trail — Searchable log of all system events (leave submissions, approvals, rejections, document uploads, chat queries) with actor name, action type, timestamp, and target resource](docs/screenshots/audit-logs.png) | ![Audit Log Inspect Modal — Detailed JSON view of a single audit event showing full request payload, actor metadata, timestamp, and before/after state diff](docs/screenshots/audit-log-inspect-modal.png) |
+| *Filterable audit trail with Leave, Policy Q&A, and Documents category tabs* | *JSON inspector modal: full event payload, actor metadata, and state diffs* |
+
+---
+
+### 🔧 n8n Workflow Engine — Visual Automation
+
+The n8n self-hosted workflow engine handles leave routing and RAG orchestration via visual node-based pipelines:
+
+| Leave Approval Routing Workflow | RAG Chat Orchestration Workflow |
+|:---:|:---:|
+| ![n8n Leave Approval Workflow — Active workflow with 89 executions: Webhook Trigger (POST /leave-approval) → Validate & Route Approver (JavaScript Department Classifier routing to hod.science@cempaka) → Respond to Webhook (Confirm Dispatch with pending_review status). Execution #1904 Success: Leave request lv_001 routed to Science & Mathematics HoD](docs/screenshots/n8n-workflow-leave-approval.png) | ![n8n RAG Chat Workflow — Active workflow with 142 executions: Webhook Trigger (POST /chat-query) → FastAPI Vector Retriever (Ollama + pgvector via authenticated HTTP call) → Respond to Webhook (Return JSON payload with answer and citations). Execution #4829 Success: 3 nodes executed in 242ms, 2 policy citations returned](docs/screenshots/n8n-workflow-rag-chat.png) |
+| *Leave routing: Webhook → Department Classifier → HoD Assignment → Dispatch Confirmation* | *RAG pipeline: Webhook → FastAPI Vector Retriever → JSON Response with citations* |
+
+---
+
+### 📱 Cross-Platform Mobile & Responsive Views
+
+SchoolPilot is fully responsive across desktop, tablet, and mobile breakpoints:
+
+#### Mobile Views — Chat, Leave, Navigation
+
+| Mobile Chat Welcome | Mobile Leave List | Mobile Navigation Drawer |
+|:---:|:---:|:---:|
+| ![Mobile Chat Welcome — Policy assistant category cards and example prompts on a 375×667 mobile viewport](docs/screenshots/chat-welcome-mobile.png) | ![Mobile Leave List — Teacher's leave request history on a mobile viewport with status badges and compact card layout](docs/screenshots/leave-mobile-375x667.png) | ![Mobile Navigation Drawer — Slide-out hamburger menu showing Policy Q&A, Leave Requests, and Admin navigation links with user avatar and logout](docs/screenshots/navigation-mobile-drawer.png) |
+| *Chat welcome with stacked category cards on mobile* | *Leave history with compact status cards* | *Slide-out nav drawer with role-aware menu items* |
+
+#### Mobile & Tablet — Login Across Breakpoints
+
+| Tablet Landscape (1024×768) | Tablet Portrait (768×1024) | Mobile (375×667) |
+|:---:|:---:|:---:|
+| ![Login — Tablet Landscape: full-width login form with background image and Quick Switch buttons at 1024×768](docs/screenshots/login-tablet-1024x768.png) | ![Login — Tablet Portrait: vertically stacked login form with Quick Switch buttons at 768×1024](docs/screenshots/login-tablet-768x1024.png) | ![Login — Mobile: compact single-column login form with stacked Quick Switch buttons at 375×667](docs/screenshots/login-mobile-375x667.png) |
+| *Landscape tablet: side-by-side layout with background art* | *Portrait tablet: centered card with visible branding* | *Mobile: full-width compact login with stacked controls* |
+
+#### Mobile & Tablet — Admin Dashboard Across Breakpoints
+
+| Admin Dashboard — Tablet Landscape (1024×768) | Admin Dashboard — Mobile (375×667) |
+|:---:|:---:|
+| ![Admin Dashboard Tablet — KPI cards, quick-action shortcuts, and audit trail at 1024×768 tablet landscape viewport](docs/screenshots/admin-dashboard-1024x768.png) | ![Admin Dashboard Mobile — Stacked KPI cards and vertically scrolling audit trail on a 375×667 mobile viewport](docs/screenshots/admin-dashboard-375x667.png) |
+| *Tablet: full dashboard with grid layout and audit trail visible* | *Mobile: stacked cards with scrollable compact layout* |
 
 ---
 
@@ -250,7 +434,7 @@ Or upload any `.pdf`, `.docx`, or `.md` file directly via the **Documents** tab 
 Run the automated test suite across backend unit tests, RBAC security gates, and integration suites:
 
 ```bash
-# Run backend pytest suite
+# Run backend pytest suite (33 tests across 6 modules)
 $env:PYTHONPATH="backend"; pytest backend/tests -v
 
 # Run frontend build & type check
