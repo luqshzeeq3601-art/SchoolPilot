@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { api, DocumentItem } from '../api/client';
+import { TablePagination } from '../components/TablePagination';
 import {
   FileText,
   Upload,
@@ -18,6 +19,8 @@ export const UploadPage: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(8);
   const [message, setMessage] = useState<{
     type: 'success' | 'error';
     text: string;
@@ -100,10 +103,21 @@ export const UploadPage: React.FC = () => {
   const filteredDocs = documents.filter((doc) =>
     doc.filename.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Reset to page 1 on search or page size changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, pageSize]);
+
+  // Pagination calculations
+  const safePage = Math.min(page, Math.max(1, Math.ceil(filteredDocs.length / pageSize)));
+  const start = (safePage - 1) * pageSize;
+  const paginatedDocs = filteredDocs.slice(start, start + pageSize);
+
   const totalChunks = documents.reduce((acc, d) => acc + (d.chunk_count || 0), 0);
 
   return (
-    <div className="min-h-full bg-white text-[#101A2E]">
+    <div className="flex-1 w-full flex flex-col bg-[#FAF8F5] text-[#101A2E] pb-12 xl:pb-16">
       <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10 2xl:max-w-[1400px]">
         {/* Header — matches reference: small solid icon, tight title, compact pills */}
         <div className="mb-6 flex flex-col gap-4 lg:mb-8 lg:flex-row lg:items-start lg:justify-between">
@@ -261,17 +275,17 @@ export const UploadPage: React.FC = () => {
                 <table className="w-full border-collapse text-left">
                   <thead>
                     <tr className="border-b border-[#E5E7EB] bg-[#F8FAFC] text-[11px] font-bold uppercase tracking-[0.07em] text-slate-500 lg:text-xs">
-                      <th scope="col" className="px-6 py-4 lg:px-7">Document name</th>
+                      <th scope="col" className="px-6 py-4 xl:px-8">Document name</th>
                       <th scope="col" className="px-4 py-4">Format</th>
                       <th scope="col" className="px-4 py-4">Vector chunks</th>
                       <th scope="col" className="px-4 py-4">Indexed at</th>
-                      <th scope="col" className="px-4 py-4 text-right">Actions</th>
+                      <th scope="col" className="px-6 py-4 xl:px-8 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#EEF2F7]">
-                    {filteredDocs.map((doc) => (
+                    {paginatedDocs.map((doc) => (
                       <tr key={doc.id} className="transition-colors hover:bg-[#FFFEFB]">
-                        <td className="px-6 py-4 lg:px-7 lg:py-5">
+                        <td className="px-6 py-4 xl:px-8 xl:py-5">
                           <div className="flex items-center gap-3">
                             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#F9F1E5] text-[#8C592B] lg:h-11 lg:w-11">
                               <FileText aria-hidden="true" className="h-[18px] w-[18px] lg:h-5 lg:w-5" />
@@ -309,7 +323,7 @@ export const UploadPage: React.FC = () => {
                             minute: '2-digit',
                           })}
                         </td>
-                        <td className="px-4 py-4 text-right">
+                        <td className="px-6 py-4 xl:px-8 text-right">
                           <button
                             onClick={() => handleDelete(doc.id, doc.filename)}
                             aria-label={`Delete ${doc.filename}`}
@@ -326,7 +340,7 @@ export const UploadPage: React.FC = () => {
               </div>
 
               <ul className="divide-y divide-[#EEF2F7] md:hidden">
-                {filteredDocs.map((doc) => (
+                {paginatedDocs.map((doc) => (
                   <li key={doc.id} className="flex items-center justify-between gap-3 p-4">
                     <div className="flex min-w-0 items-center gap-2.5">
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#F9F1E5] text-[#8C592B]">
@@ -349,6 +363,16 @@ export const UploadPage: React.FC = () => {
                   </li>
                 ))}
               </ul>
+
+              {/* Table Footer with Pagination Controls */}
+              <TablePagination
+                totalItems={filteredDocs.length}
+                page={page}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                onPageSizeChange={setPageSize}
+                itemLabel="documents"
+              />
             </>
           )}
         </div>

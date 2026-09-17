@@ -17,7 +17,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Inspect event_type with backward-compatible default\nconst payload = $input.item.json.body || $input.item.json;\nconst eventType = payload.event_type || 'leave_submitted';\n\nif (eventType === 'leave_submitted') {\n  return [\n    [{ json: payload }],\n    []\n  ];\n} else if (eventType === 'leave_approved') {\n  return [\n    [],\n    [{ json: payload }]\n  ];\n} else {\n  throw new Error(`Unsupported event_type '${eventType}'. Supported events: leave_submitted, leave_approved.`);\n}\n"
+        "jsCode": "// Inspect event_type with backward-compatible default\nconst raw = ($input.all && $input.all().length > 0) ? $input.all()[0].json : ($input.first ? $input.first().json : {});\nconst payload = raw.body || raw;\nconst eventType = payload.event_type || 'leave_submitted';\n\nif (eventType === 'leave_submitted') {\n  return [\n    [{ json: payload }],\n    []\n  ];\n} else if (eventType === 'leave_approved') {\n  return [\n    [],\n    [{ json: payload }]\n  ];\n} else {\n  throw new Error(`Unsupported event_type '${eventType}'. Supported events: leave_submitted, leave_approved.`);\n}\n"
       },
       "id": "2",
       "name": "Route by Event Type",

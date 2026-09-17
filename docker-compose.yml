@@ -44,6 +44,7 @@ services:
       - EXECUTIONS_DATA_PRUNE=true
       - EXECUTIONS_DATA_MAX_AGE=168
       - N8N_DEFAULT_BINARY_DATA_MODE=filesystem
+      - TELEGRAM_ALERT_CHAT_ID=${TELEGRAM_ALERT_CHAT_ID:-694402823}
     volumes:
       - n8n_data:/home/node/.n8n
       - uploaded_docs:/app/uploads
@@ -78,6 +79,7 @@ services:
     volumes:
       - ./backend:/app
       - ./data:/app/data:ro
+      - ./workflows:/workflows:ro
       - uploaded_docs:/app/uploads
     extra_hosts:
       - "host.docker.internal:host-gateway"

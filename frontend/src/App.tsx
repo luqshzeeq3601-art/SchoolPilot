@@ -8,14 +8,15 @@ import { ChatPage } from './chat/ChatPage';
 import { LeaveListPage } from './leave/LeaveListPage';
 import { UploadPage } from './documents/UploadPage';
 import { DashboardPage } from './admin/DashboardPage';
+import { UserManagementPage } from './admin/UserManagementPage';
 
 export const App: React.FC = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <div className="h-screen bg-white text-[#101A2E] flex flex-col antialiased overflow-hidden selection:bg-[#F5EDE4] selection:text-[#8C592B]">
+        <div className="h-screen bg-[#FAF8F5] text-[#101A2E] flex flex-col antialiased overflow-hidden selection:bg-[#F5EDE4] selection:text-[#8C592B]">
           <Navbar />
-          <main id="main-content" className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+          <main id="main-content" className="flex-1 flex flex-col min-h-0 overflow-y-auto bg-[#FAF8F5]">
             <Routes>
               <Route path="/login" element={<LoginPage />} />
 
@@ -51,6 +52,15 @@ export const App: React.FC = () => {
                 element={
                   <ProtectedRoute allowedRoles={['admin']}>
                     <DashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/admin/users"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <UserManagementPage />
                   </ProtectedRoute>
                 }
               />

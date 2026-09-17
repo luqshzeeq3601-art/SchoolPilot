@@ -23,7 +23,7 @@
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
-        "chatId": "={{ $env.TELEGRAM_ALERT_CHAT_ID || '-1001234567890' }}",
+        "chatId": "={{ $env.TELEGRAM_ALERT_CHAT_ID || '694402823' }}",
         "text": "={{ $json.formatted_message }}",
         "additionalFields": {
           "parse_mode": "Markdown"
@@ -37,7 +37,7 @@
       "continueOnFail": true,
       "credentials": {
         "telegramApi": {
-          "id": "telegram-alert-bot",
+          "id": "1jR9eQhR5j2PmCo8",
           "name": "Telegram Alert Bot"
         }
       }
@@ -69,6 +69,7 @@
   },
   "settings": {
     "saveExecutionProgress": true,
+    "callerPolicy": "any",
     "errorWorkflow": null
   }
 }

@@ -2,6 +2,7 @@ import os
 import asyncio
 import asyncpg
 import json
+import uuid
 from pathlib import Path
 
 
@@ -41,6 +42,10 @@ async def sync_workflow_json():
 
     repo_root = Path(__file__).resolve().parent.parent.parent
     workflows_dir = repo_root / "workflows"
+    if not workflows_dir.exists():
+        workflows_dir = Path(__file__).resolve().parent.parent / "workflows"
+    if not workflows_dir.exists():
+        workflows_dir = Path("/workflows")
 
     # Clean webhook_entity first to avoid stale paths
     await conn.execute("DELETE FROM webhook_entity")
@@ -59,28 +64,34 @@ async def sync_workflow_json():
         nodes_json = json.dumps(wf_data.get("nodes", []))
         conn_json = json.dumps(wf_data.get("connections", {}))
         settings_json = json.dumps(wf_data.get("settings", {}))
+        version_id = str(uuid.uuid4())
 
         # Check if exists in workflow_entity
         exists = await conn.fetchval("SELECT id FROM workflow_entity WHERE id = $1", wf_id)
         if not exists:
             await conn.execute(
-                'INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, "createdAt", "updatedAt") VALUES ($1, $2, true, $3, $4, $5, NOW(), NOW())',
-                wf_id, wf_name, nodes_json, conn_json, settings_json
+                'INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, "versionId", "createdAt", "updatedAt") VALUES ($1, $2, true, $3, $4, $5, $6, NOW(), NOW())',
+                wf_id, wf_name, nodes_json, conn_json, settings_json, version_id
             )
             print(f"Created workflow: {wf_name} ({wf_id})")
         else:
             await conn.execute(
-                'UPDATE workflow_entity SET name = $1, nodes = $2, connections = $3, settings = $4, active = true, "updatedAt" = NOW() WHERE id = $5',
-                wf_name, nodes_json, conn_json, settings_json, wf_id
+                'UPDATE workflow_entity SET name = $1, nodes = $2, connections = $3, settings = $4, active = true, "versionId" = $5, "updatedAt" = NOW() WHERE id = $6',
+                wf_name, nodes_json, conn_json, settings_json, version_id, wf_id
             )
             print(f"Updated workflow: {wf_name} ({wf_id})")
 
-        # Update workflow_history
-        has_history = await conn.fetchval('SELECT id FROM workflow_history WHERE "workflowId" = $1', wf_id)
+        # Update or insert workflow_history
+        has_history = await conn.fetchval('SELECT "versionId" FROM workflow_history WHERE "workflowId" = $1', wf_id)
         if has_history:
             await conn.execute(
-                'UPDATE workflow_history SET nodes = $1, connections = $2 WHERE "workflowId" = $3',
+                'UPDATE workflow_history SET nodes = $1, connections = $2, "updatedAt" = NOW() WHERE "workflowId" = $3',
                 nodes_json, conn_json, wf_id
+            )
+        else:
+            await conn.execute(
+                'INSERT INTO workflow_history ("versionId", "workflowId", "authors", "name", "nodes", "connections", "autosaved", "nodeGroups", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, false, \'[]\'::json, NOW(), NOW())',
+                version_id, wf_id, 'system', wf_name, nodes_json, conn_json
             )
 
         # Register webhook if applicable

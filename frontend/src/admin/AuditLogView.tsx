@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { api, AuditLogItem } from '../api/client';
+import { TablePagination } from '../components/TablePagination';
 import {
   RefreshCw,
   Eye,
@@ -14,8 +15,6 @@ import {
   MoreVertical,
   ArrowDown,
 } from 'lucide-react';
-
-const PAGE_SIZE = 6;
 
 const formatStamp = (iso: string) => {
   const d = new Date(iso);
@@ -80,6 +79,7 @@ export const AuditLogView: React.FC = () => {
   const [selectedLog, setSelectedLog] = useState<AuditLogItem | null>(null);
   const [copied, setCopied] = useState(false);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(8);
 
   const fetchLogs = async () => {
     setLoading(true);
@@ -99,7 +99,7 @@ export const AuditLogView: React.FC = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [searchQuery, actionFilter]);
+  }, [searchQuery, actionFilter, pageSize]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -166,17 +166,9 @@ export const AuditLogView: React.FC = () => {
     return true;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const start = (safePage - 1) * PAGE_SIZE;
-  const pageLogs = filteredLogs.slice(start, start + PAGE_SIZE);
-
-  const pageNumbers = useMemo(() => {
-    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
-    if (safePage <= 3) return [1, 2, 3, 4, 5, -1, totalPages];
-    if (safePage >= totalPages - 2) return [1, -1, totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-    return [1, -1, safePage - 1, safePage, safePage + 1, -1, totalPages];
-  }, [safePage, totalPages]);
+  const safePage = Math.min(page, Math.max(1, Math.ceil(filteredLogs.length / pageSize)));
+  const start = (safePage - 1) * pageSize;
+  const pageLogs = filteredLogs.slice(start, start + pageSize);
 
   const filters = [
     { id: 'all', label: `All Events (${counts.all})` },
@@ -263,19 +255,19 @@ export const AuditLogView: React.FC = () => {
             <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="border-b border-[#ECE7DC] bg-[#F8FAFC] text-[11px] font-bold uppercase tracking-[0.07em] text-slate-500 lg:text-[13px]">
-                  <th scope="col" className="px-5 py-3.5 lg:px-7">
+                  <th scope="col" className="px-6 py-4 xl:px-8">
                     <span className="inline-flex items-center gap-1.5">Timestamp <ArrowDown aria-hidden="true" className="h-3.5 w-3.5" /></span>
                   </th>
                   <th scope="col" className="px-4 py-3.5">Actor / User</th>
                   <th scope="col" className="px-4 py-3.5">Action event</th>
                   <th scope="col" className="px-4 py-3.5">Target resource</th>
-                  <th scope="col" className="px-4 py-3.5 text-right">Details</th>
+                  <th scope="col" className="px-6 py-4 xl:px-8 text-right">Details</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#EEF2F7]">
                 {pageLogs.map((log) => (
                   <tr key={log.id} className="transition-colors hover:bg-[#FFFEFB]">
-                    <td className="whitespace-nowrap px-5 py-4 text-[13px] tabular-nums text-slate-500 lg:px-7 lg:text-[15px]">
+                    <td className="whitespace-nowrap px-6 py-4 text-[13px] tabular-nums text-slate-500 xl:px-8 xl:py-4.5 lg:text-[15px]">
                       {formatStamp(log.timestamp)}
                     </td>
                     <td className="max-w-[260px] truncate px-4 py-4 text-[13px] font-medium text-slate-700 lg:max-w-[320px] lg:text-[15px]">
@@ -290,7 +282,7 @@ export const AuditLogView: React.FC = () => {
                       {log.resource_type}
                       {log.resource_id && <span className="text-slate-400"> #{log.resource_id.substring(0, 6)}</span>}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-4 text-right">
+                    <td className="whitespace-nowrap px-6 py-4 xl:px-8 text-right">
                       <span className="inline-flex items-center gap-1">
                         <button
                           onClick={() => setSelectedLog(log)}
@@ -331,48 +323,15 @@ export const AuditLogView: React.FC = () => {
             ))}
           </ul>
 
-          {/* pagination */}
-          <div className="flex flex-col gap-3 border-t border-[#ECE7DC] px-5 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-7">
-            <p className="text-[13px] font-normal text-slate-500 lg:text-sm" role="status">
-              Showing {filteredLogs.length === 0 ? 0 : start + 1}–{Math.min(start + PAGE_SIZE, filteredLogs.length)} of {filteredLogs.length} events
-            </p>
-            <nav aria-label="Audit log pages" className="flex items-center gap-1.5">
-              <button
-                onClick={() => setPage(Math.max(1, safePage - 1))}
-                disabled={safePage === 1}
-                aria-label="Previous page"
-                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-[#E2E8F0] text-slate-500 transition-colors hover:bg-slate-50 disabled:opacity-40"
-              >
-                <ChevronLeft aria-hidden="true" className="h-4 w-4" />
-              </button>
-              {pageNumbers.map((n, i) =>
-                n === -1 ? (
-                  <span key={`e${i}`} className="px-1 text-[13px] text-slate-400">…</span>
-                ) : (
-                  <button
-                    key={n}
-                    onClick={() => setPage(n)}
-                    aria-current={n === safePage ? 'page' : undefined}
-                    className={`h-9 min-w-9 cursor-pointer rounded-lg border px-2 text-[13px] font-bold transition-colors lg:h-10 lg:min-w-10 lg:text-sm ${
-                      n === safePage
-                        ? 'border-[#8C592B] bg-[#8C592B] text-white'
-                        : 'border-[#E2E8F0] text-slate-600 hover:border-[#C9A87F]'
-                    }`}
-                  >
-                    {n}
-                  </button>
-                )
-              )}
-              <button
-                onClick={() => setPage(Math.min(totalPages, safePage + 1))}
-                disabled={safePage === totalPages}
-                aria-label="Next page"
-                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-[#E2E8F0] text-slate-500 transition-colors hover:bg-slate-50 disabled:opacity-40"
-              >
-                <ChevronRight aria-hidden="true" className="h-4 w-4" />
-              </button>
-            </nav>
-          </div>
+          {/* Table Footer with Pagination Controls */}
+          <TablePagination
+            totalItems={filteredLogs.length}
+            page={page}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            itemLabel="events"
+          />
         </>
       )}
 

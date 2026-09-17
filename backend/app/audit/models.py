@@ -19,6 +19,10 @@ class AuditAction(str, enum.Enum):
     N8N_WORKFLOW_TRIGGERED = "n8n_workflow_triggered"
     N8N_WORKFLOW_CALLBACK = "n8n_workflow_callback"
     MOCK_HRIS_SYNC = "mock_hris_sync"
+    USER_CREATED = "user_created"
+    USER_UPDATED = "user_updated"
+    USER_STATUS_CHANGED = "user_status_changed"
+    USER_PASSWORD_RESET = "user_password_reset"
 
 
 class AuditLog(Base):

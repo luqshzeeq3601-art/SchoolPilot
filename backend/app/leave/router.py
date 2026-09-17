@@ -27,7 +27,9 @@ from app.audit.models import AuditAction
 router = APIRouter(prefix="/leave", tags=["Leave Workflows"])
 
 
-def build_leave_response(lr: LeaveRequest) -> LeaveResponse:
+def build_leave_response(lr: LeaveRequest, reviewer_override: Optional[User] = None) -> LeaveResponse:
+    reviewer = reviewer_override if reviewer_override is not None else getattr(lr, "reviewer", None)
+    reviewer_name = reviewer.full_name if reviewer else None
     return LeaveResponse(
         id=lr.id,
         teacher_id=lr.teacher_id,
@@ -42,7 +44,7 @@ def build_leave_response(lr: LeaveRequest) -> LeaveResponse:
         status=lr.status,
         submitted_at=lr.submitted_at,
         reviewed_by=lr.reviewed_by,
-        reviewer_name=lr.reviewer.full_name if lr.reviewer else None,
+        reviewer_name=reviewer_name,
         reviewed_at=lr.reviewed_at,
         review_notes=lr.review_notes,
     )
@@ -220,7 +222,7 @@ async def approve_leave_request(
     )
     await trigger_n8n_leave_approval(n8n_payload)
 
-    return build_leave_response(reloaded)
+    return build_leave_response(reloaded, reviewer_override=current_user)
 
 
 @router.patch("/{leave_id}/reject", response_model=LeaveResponse)
@@ -269,7 +271,7 @@ async def reject_leave_request(
     )
     await db.commit()
     await db.refresh(leave_rec)
-    return build_leave_response(leave_rec)
+    return build_leave_response(leave_rec, reviewer_override=current_user)
 
 
 @router.get("/summary", response_model=LeaveSummaryResponse)

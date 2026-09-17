@@ -49,7 +49,7 @@ export const DashboardPage: React.FC = () => {
     (sysStatus.n8n.status === 'down' || sysStatus.ollama.status === 'down');
 
   return (
-    <div className="min-h-full bg-white text-[#101A2E]">
+    <div className="flex-1 w-full flex flex-col bg-[#FAF8F5] text-[#101A2E] pb-12 xl:pb-16">
       <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10 2xl:max-w-[1440px]">
         {/* Briefing header */}
         <div className="relative mb-6 lg:mb-8">
@@ -175,10 +175,11 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Shortcuts */}
-        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3 lg:mb-8 lg:gap-5">
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:mb-8 lg:gap-5">
           {[
-            { to: '/leaves', icon: Users, bg: 'bg-[#F9F1E5] text-[#8C592B]', title: 'Staff Leave Management', sub: 'Review and dig teacher applications' },
-            { to: '/documents', icon: FileText, bg: 'bg-[#F9F1E5] text-[#8C592B]', title: 'Manage Documents & SOPs', sub: 'Upload and manage to vector store' },
+            { to: '/admin/users', icon: Users, bg: 'bg-[#F5EDE4] text-[#8C592B]', title: 'Staff & User Accounts', sub: 'Manage roles, status & credentials' },
+            { to: '/leaves', icon: Users, bg: 'bg-[#F9F1E5] text-[#8C592B]', title: 'Staff Leave Management', sub: 'Review and audit teacher requests' },
+            { to: '/documents', icon: FileText, bg: 'bg-[#F9F1E5] text-[#8C592B]', title: 'Manage Documents & SOPs', sub: 'Upload and index to vector store' },
             { to: '/', icon: Settings, bg: 'bg-[#E7F6EC] text-[#15803D]', title: 'Launch Policy Assistant', sub: 'Query regulations with citations' },
           ].map((c) => (
             <Link

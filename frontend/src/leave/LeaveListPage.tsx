@@ -26,6 +26,7 @@ import {
   Eye,
   Info,
 } from 'lucide-react';
+import { TablePagination } from '../components/TablePagination';
 
 export const LeaveListPage: React.FC = () => {
   const { user } = useAuth();
@@ -36,6 +37,10 @@ export const LeaveListPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(8);
 
   // Reviewer rejection modal state
   const [rejectingLeave, setRejectingLeave] = useState<LeaveRecord | null>(null);
@@ -270,6 +275,16 @@ export const LeaveListPage: React.FC = () => {
     return matchesStatus && matchesSearch;
   });
 
+  // Reset to page 1 on filter or page size changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, statusFilter, pageSize]);
+
+  // Pagination calculations
+  const safePage = Math.min(page, Math.max(1, Math.ceil(filteredLeaves.length / pageSize)));
+  const start = (safePage - 1) * pageSize;
+  const paginatedLeaves = filteredLeaves.slice(start, start + pageSize);
+
   const filterTabs = [
     { id: '', label: 'All Requests', count: counts.all },
     { id: 'pending', label: 'Pending', count: counts.pending, alert: counts.pending > 0 },
@@ -369,7 +384,7 @@ export const LeaveListPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-full bg-[#FAF8F5] px-4 py-5 pb-6 sm:px-6 lg:px-8 xl:px-12">
+    <div className="flex-1 w-full flex flex-col bg-[#FAF8F5] px-4 py-5 pb-10 sm:px-6 lg:px-8 xl:px-12 xl:pb-12">
       <div className="mx-auto max-w-7xl xl:max-w-[1560px] 2xl:max-w-[1680px] w-full">
         {/* Page Header */}
         <div className="relative mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -575,7 +590,7 @@ export const LeaveListPage: React.FC = () => {
         )}
 
         {/* Main Table Container */}
-        <div className="flex max-h-[calc(100dvh-20rem)] xl:max-h-[calc(100dvh-20.5rem)] flex-col overflow-hidden rounded-2xl border border-[#E7E2DC] bg-white shadow-sm">
+        <div className="flex flex-col overflow-hidden rounded-2xl border border-[#E7E2DC] bg-white shadow-2xs">
           {loading ? (
             /* Skeleton Loading State */
             <div className="p-6 space-y-4" aria-busy="true" aria-label="Loading leave applications">
@@ -658,16 +673,16 @@ export const LeaveListPage: React.FC = () => {
                 <table className="w-full text-left border-collapse">
                   <thead className="sticky top-0 z-10 border-b border-[#F0EBE5] bg-white">
                     <tr className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      {isReviewer && <th className="py-3.5 px-6">APPLICANT</th>}
-                      <th className="py-3.5 px-6">CATEGORY</th>
-                      <th className="py-3.5 px-6">DATES &amp; DURATION</th>
-                      <th className="py-3.5 px-6">REASON &amp; RELIEF COVER</th>
-                      <th className="py-3.5 px-6">STATUS</th>
-                      <th className="py-3.5 px-6 text-right">ACTIONS</th>
+                      {isReviewer && <th className="py-3.5 px-6 xl:px-8">APPLICANT</th>}
+                      <th className="py-3.5 px-6 xl:px-8">CATEGORY</th>
+                      <th className="py-3.5 px-6 xl:px-8">DATES &amp; DURATION</th>
+                      <th className="py-3.5 px-6 xl:px-8">REASON &amp; RELIEF COVER</th>
+                      <th className="py-3.5 px-6 xl:px-8">STATUS</th>
+                      <th className="py-3.5 px-6 xl:px-8 text-right">ACTIONS</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#F0EBE5]/80">
-                    {filteredLeaves.map((lr) => {
+                    {paginatedLeaves.map((lr) => {
                       const cat = getCategoryBadge(lr.leave_type);
                       const stat = getStatusBadge(lr.status);
                       const CatIcon = cat.icon;
@@ -690,7 +705,7 @@ export const LeaveListPage: React.FC = () => {
                       return (
                         <tr key={lr.id} className="hover:bg-[#FAF8F5]/60 transition-colors">
                           {isReviewer && (
-                            <td className="py-4 px-6 align-top">
+                            <td className="py-4 px-6 xl:px-8 align-top">
                               <div className="flex items-center gap-2.5">
                                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F7F3EE] text-xs font-semibold text-[#8C592B] border border-[#EADBCC]">
                                   {applicantInitials}
@@ -708,7 +723,7 @@ export const LeaveListPage: React.FC = () => {
                           )}
 
                           {/* Category Badge with Icon */}
-                          <td className="py-4 px-6 whitespace-nowrap align-top">
+                          <td className="py-4 px-6 xl:px-8 whitespace-nowrap align-top">
                             <span
                               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold ${cat.classes}`}
                             >
@@ -718,7 +733,7 @@ export const LeaveListPage: React.FC = () => {
                           </td>
 
                           {/* Dates & Duration */}
-                          <td className="py-4 px-6 whitespace-nowrap align-top">
+                          <td className="py-4 px-6 xl:px-8 whitespace-nowrap align-top">
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-sm text-[#101A2E] tabular-nums">
                                 {formatDate(lr.start_date)}
@@ -734,7 +749,7 @@ export const LeaveListPage: React.FC = () => {
                           </td>
 
                           {/* Reason & Relief Cover */}
-                          <td className="py-4 px-6 max-w-sm xl:max-w-md align-top">
+                          <td className="py-4 px-6 xl:px-8 max-w-sm xl:max-w-md align-top">
                             <p className="font-semibold text-sm text-[#101A2E] leading-snug">
                               {lr.reason}
                             </p>
@@ -756,7 +771,7 @@ export const LeaveListPage: React.FC = () => {
                           </td>
 
                           {/* Status Badge with Icon */}
-                          <td className="py-4 px-6 whitespace-nowrap align-top">
+                          <td className="py-4 px-6 xl:px-8 whitespace-nowrap align-top">
                             <span
                               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${stat.classes}`}
                             >
@@ -771,7 +786,7 @@ export const LeaveListPage: React.FC = () => {
                           </td>
 
                           {/* Actions Column */}
-                          <td className="py-4 px-6 text-right whitespace-nowrap align-top">
+                          <td className="py-4 px-6 xl:px-8 text-right whitespace-nowrap align-top">
                             <div className="flex items-center justify-end gap-1.5">
                               {/* Reviewer Action Buttons */}
                               {isReviewer && lr.status === 'pending' && (
@@ -856,7 +871,7 @@ export const LeaveListPage: React.FC = () => {
 
               {/* Responsive Mobile / Tablet Layout (< lg) */}
               <div className="divide-y divide-[#F0EBE5] lg:hidden flex-1 min-h-0 overflow-y-auto">
-                {filteredLeaves.map((lr) => {
+                {paginatedLeaves.map((lr) => {
                   const cat = getCategoryBadge(lr.leave_type);
                   const stat = getStatusBadge(lr.status);
                   const CatIcon = cat.icon;
@@ -1024,31 +1039,14 @@ export const LeaveListPage: React.FC = () => {
               </div>
 
               {/* Table Footer with Pagination Controls */}
-              <div className="shrink-0 border-t border-[#F0EBE5] bg-white px-6 py-3 text-xs font-medium text-slate-500 flex items-center justify-between">
-                <div>
-                  Showing <strong className="text-[#101A2E] tabular-nums">{filteredLeaves.length}</strong> of{' '}
-                  <strong className="text-[#101A2E] tabular-nums">{leaves.length}</strong> applications
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="h-7 w-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-40"
-                    disabled
-                    aria-label="Previous page"
-                  >
-                    <ChevronLeft className="h-3.5 w-3.5" />
-                  </button>
-                  <span className="text-xs font-medium text-slate-700 px-1">1 / 1</span>
-                  <button
-                    type="button"
-                    className="h-7 w-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-40"
-                    disabled
-                    aria-label="Next page"
-                  >
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
+              <TablePagination
+                totalItems={filteredLeaves.length}
+                page={page}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                onPageSizeChange={setPageSize}
+                itemLabel="applications"
+              />
             </>
           )}
         </div>

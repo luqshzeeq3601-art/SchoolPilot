@@ -6,6 +6,7 @@ import {
   MessageSquare,
   CalendarCheck,
   LayoutGrid,
+  Users,
   LogOut,
   Menu,
   X,
@@ -24,6 +25,7 @@ export const Navbar: React.FC = () => {
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
+    if (path === '/admin') return location.pathname === '/admin';
     return location.pathname.startsWith(path);
   };
 
@@ -72,10 +74,16 @@ export const Navbar: React.FC = () => {
                 <span>Leave Requests</span>
               </Link>
               {user.role === 'admin' && (
-                <Link to="/admin" className={navItemClass(isActive('/admin'))}>
-                  <LayoutGrid className="h-4 w-4 xl:h-4.5 xl:w-4.5" />
-                  <span>Admin</span>
-                </Link>
+                <>
+                  <Link to="/admin" className={navItemClass(isActive('/admin'))}>
+                    <LayoutGrid className="h-4 w-4 xl:h-4.5 xl:w-4.5" />
+                    <span>Admin</span>
+                  </Link>
+                  <Link to="/admin/users" className={navItemClass(isActive('/admin/users'))}>
+                    <Users className="h-4 w-4 xl:h-4.5 xl:w-4.5" />
+                    <span>Staff</span>
+                  </Link>
+                </>
               )}
             </nav>
           </div>
@@ -157,10 +165,16 @@ export const Navbar: React.FC = () => {
               <span>Leave Requests</span>
             </Link>
             {user.role === 'admin' && (
-              <Link to="/admin" className={navItemClass(isActive('/admin'))}>
-                <LayoutGrid className="h-4.5 w-4.5" />
-                <span>Admin</span>
-              </Link>
+              <>
+                <Link to="/admin" className={navItemClass(isActive('/admin'))}>
+                  <LayoutGrid className="h-4.5 w-4.5" />
+                  <span>Admin</span>
+                </Link>
+                <Link to="/admin/users" className={navItemClass(isActive('/admin/users'))}>
+                  <Users className="h-4.5 w-4.5" />
+                  <span>Staff</span>
+                </Link>
+              </>
             )}
           </nav>
         </div>

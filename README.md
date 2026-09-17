@@ -24,44 +24,35 @@ School administrators and operations staff spend dozens of hours every week acti
 
 ---
 
+---
+
 ## 🏛️ System Architecture
 
-### High-Level Architecture Overview
+### High-Level Operations Architecture
 
-The system uses a decoupled microservice architecture with 5 core layers — all self-hosted and orchestrated via Docker Compose:
+The system uses a decoupled, privacy-preserving microservice architecture with 5 core layers — all self-hosted and orchestrated via Docker Compose:
 
-![System Architecture Flowchart — 5-layer technical flow showing Client Layer (React 18) → API Gateway (FastAPI) → Automation Engine (n8n) → AI Inference (Ollama) → Persistent Storage (PostgreSQL + pgvector)](docs/System%20Architecture%20Flowchart.png)
+![SchoolPilot Operations Platform — Technical Architecture Diagram showing Frontend Client (React 18 + Vite), Backend Gateway (FastAPI Python 3.12), Automation Engine (n8n Self-Hosted), Local AI Engine (Ollama nomic-embed-text + Qwen 2.5 / Llama 3.1), and Persistence & Vectors (PostgreSQL 16 + pgvector) with color-coded data flow arrows](docs/SchoolPilot%20Operations%20Platform%20Architecture.png)
 
-*▲ End-to-end architecture: React Frontend → FastAPI Gateway → n8n Workflow Engine → Ollama Local AI → PostgreSQL + pgvector. Each layer is labelled with its key technologies and responsibilities.*
-
----
-
-### Detailed Component Interaction Map
-
-Full data flow between all system components including request/response paths, authentication, and AI inference routing:
-
-![SchoolPilot AI System Architecture — Detailed component diagram showing React Frontend with Teacher/HoD/Admin roles, FastAPI Gateway with JWT Auth and Business Logic, n8n Automation with Leave Approval and RAG Orchestration workflows, Ollama AI with Qwen 2.5 LLM and nomic-embed-text, and PostgreSQL + pgvector for relational data and vector embeddings](docs/choolPilot%20AI%20System%20Architecture.png)
-
-*▲ Detailed interaction map: labeled request/response arrows between React Frontend, FastAPI Central API Router (JWT Auth, Request Routing, Business Logic), n8n Automation (Leave Approval, RAG Orchestration), Ollama AI (LLM & Embeddings), and PostgreSQL + pgvector (User Data, Leave Records, Audit Logs, Document Embeddings).*
+*▲ End-to-end architecture: React 18 Frontend (Role-Based Guards) → FastAPI API Gateway (JWT Auth, Chunker, pgvector Retriever) → n8n Workflow Automation Engine → Ollama Local AI (nomic-embed-text + Qwen 2.5) → PostgreSQL 16 + pgvector (Relational integrity & 768-dim HNSW vector store).*
 
 ---
 
-### Technical Operations Architecture Diagram
+### Automated Error Resilience & Telegram Alerting
 
-End-to-end data flow with color-coded pipelines: Client to API (HTTP), Document Ingestion, Hybrid n8n Orchestration, Local AI Inference, and Leave Workflow persistence:
+Global error handling architecture capturing failures, redacting PII, and dispatching instant Telegram notifications:
 
-![SchoolPilot Operations Platform — Technical Architecture Diagram showing Frontend Client (React 18 + Vite), Backend Gateway (FastAPI Python 3.12), Automation Engine (n8n Self-Hosted), Local AI Engine (Ollama nomic-embed-text + Qwen 2.5 / Llama 3.1), and Persistence & Vectors (PostgreSQL 16 + pgvector) with color-coded data flow arrows](docs/SchoolPilot%20Operations%20Architecture%20Diagram.png)
+![SchoolPilot Error & Telegram Alert Architecture — Flow showing n8n Error Trigger, Data Sanitization & PII Redaction, and Telegram Alert Bot Notification](docs/SchoolPilot%20Error%20%26%20Telegram%20Alert%20Architecture.png)
 
-*▲ Technical Operations Diagram: Complete data flow showing HTTP requests, document ingestion (upload → chunking → 768-dim embedding → pgvector), hybrid n8n webhook triggers with fallback, local Ollama LLM inference, and relational leave/audit persistence.*
-
+*▲ Error Alert Pipeline: Any node failure in n8n triggers the centralized error handler, scrubs sensitive personal/medical data, and dispatches a formatted markdown alert via Telegram.*
 
 ---
 
 ## 🔄 How It Works
 
-### AI Knowledge Pipeline — From Documents to Answers
+### AI Knowledge Pipeline — From Documents to Grounded Citations
 
-This diagram shows the complete end-to-end RAG (Retrieval-Augmented Generation) pipeline: how school policy documents are ingested, chunked, embedded, stored, retrieved, and served back as grounded answers with citations.
+This diagram shows the complete end-to-end RAG (Retrieval-Augmented Generation) pipeline: how school policy documents are ingested, chunked, embedded, stored, retrieved, and served back as grounded answers with citations:
 
 ![SchoolPilot AI Knowledge Pipeline — 7-step flow: (1) Document Upload (PDF, DOCX, TXT) → (2) Text Chunking with metadata → (3) Vector Embedding via Ollama nomic-embed-text → (4) pgvector Storage in PostgreSQL → (5) Semantic Retrieval via similarity search → (6) FastAPI query processing and RAG orchestration → (7) React Web Dashboard with chat interface and document management](docs/SchoolPilot%20AI%20Knowledge%20Pipeline.png)
 
@@ -69,13 +60,13 @@ This diagram shows the complete end-to-end RAG (Retrieval-Augmented Generation) 
 
 ---
 
-### Automated HR Leave Approval Workflow
+### Modular HR Leave Approval & HRIS Sync Workflow
 
-The leave approval process is fully automated in 5 steps — from natural language request to audit-logged completion:
+The leave lifecycle is automated through parent-child modular sub-workflows:
 
-![Automated HR Leave Approval Workflow — 5-step flow: (1) Request — Employee submits leave request in chat via natural conversation → (2) AI Assist — AI Assistant verifies policy compliance via RAG, checks leave rules and handbook citations → (3) Validate — Automated validation and conflict check for overlaps and missing fields → (4) Approve — Approval routing to Head of Department for review → (5) Complete — Instant notification and PostgreSQL audit log update, fully tracked](docs/Automated%20HR%20Leave%20Approval%20Workflow.png)
+![SchoolPilot Modular Leave & HRIS Automation — Multi-step modular flow with Parent Orchestrator, Leave Routing Sub-workflow, HRIS Sync Sub-workflow, HoD Review, and PostgreSQL Audit Trail](docs/SchoolPilot%20Leave%20Automation%20Workflow.png)
 
-*▲ Leave Automation: From natural language chat request through AI policy verification, automated validation, department-based HoD routing, to immutable audit trail recording — all orchestrated via n8n.*
+*▲ Leave Automation: Natural language chat submission → AI validation with repair gate → parent orchestrator dispatch → department-based approver routing & mock HRIS payroll sync → HoD review → immutable audit trail.*
 
 ---
 
@@ -216,19 +207,35 @@ Head of Department reviews pending requests from their department with approve/r
 
 #### Administrative Overview & System Health
 
-The admin dashboard provides a unified command centre with key metrics, quick-access cards, and the system audit trail:
+The admin dashboard provides a unified command centre with key metrics, 4 quick-access shortcut cards, and the system audit trail:
 
-![Admin Dashboard — Administrative Console showing Pending Approvals count, Indexed Documents count, pgvector Chunks count, Automations Engine connection status, quick-access cards for Staff Leave Management, Manage Documents, and Launch Policy Assistant, and the System Audit Trail & Compliance Log with searchable event filters](docs/screenshots/admin-dashboard.png)
+![Admin Dashboard — Administrative Console showing Pending Approvals count, Indexed Documents count, pgvector Chunks count, Automations Engine connection status, quick-access cards for Staff & User Accounts, Staff Leave Management, Manage Documents, and Launch Policy Assistant, and the System Audit Trail & Compliance Log with searchable event filters](docs/screenshots/admin-dashboard.png)
 
-*▲ Full admin dashboard: KPI cards (pending approvals, indexed documents, pgvector chunks, n8n engine status), quick-action shortcuts, and the searchable audit trail with category filters.*
+*▲ Full admin dashboard: KPI cards (pending approvals, indexed documents, pgvector chunks, n8n engine status), 4 quick-action shortcuts (including Staff Management), and the searchable audit trail with category filters.*
 
 #### Live Integration Status Monitor
 
 Real-time health checks for all system services — accessible from the admin dashboard via "View integration status":
 
-![Integration Status Modal — Live health status for FastAPI Backend (v1.0.0, UP), PostgreSQL + pgvector (16.2, 3ms, UP), Local Ollama (llama3:8b + nomic-embed-text, 12ms, UP), and n8n Workflows (Policy RAG Webhook + Leave Approval Dispatch, 18ms, UP). Shows webhook endpoint URLs with copy buttons and "Open n8n dashboard" link](docs/screenshots/admin-n8n-integration-status.png)
+![Integration Status Modal — Live health status for FastAPI Backend (v1.0.0, UP), PostgreSQL + pgvector (16.2, 3ms, UP), Local Ollama (qwen2.5:7b + nomic-embed-text, 12ms, UP), and n8n Workflows (Policy RAG Webhook + Leave Approval Dispatch, 18ms, UP). Shows webhook endpoint URLs with copy buttons and "Open n8n dashboard" link](docs/screenshots/admin-n8n-integration-status.png)
 
 *▲ Integration health modal: all four services showing UP with response latency, version info, model details, and n8n webhook endpoint URLs.*
+
+---
+
+### 👥 Staff & User Account Management (`/admin/users`)
+
+Admins manage user accounts, assign roles (`admin`, `hod`, `teacher`), departments, and toggle active status with full table pagination:
+
+| Staff Directory & Role Management | Add Staff Account Modal |
+|:---:|:---:|
+| ![Staff & User Management Directory — Paginated staff table showing full name, email, role badge, department tag, active toggle, and action buttons](docs/screenshots/admin-user-management.png) | ![Add Staff Account Modal — Form dialog for registering new staff accounts with role selector, department dropdown, and password configuration](docs/screenshots/admin-user-add-modal.png) |
+| *Staff directory: search, role filter, department filter, and interactive pagination controls* | *Register staff modal: accessible form with immediate role-based provisioning* |
+
+| Edit Staff Details Modal | Mobile Staff Management View |
+|:---:|:---:|
+| ![Edit Staff Member Modal — Editor modal with read-only email, editable full name, role selector with self-demotion protection, and department dropdown](docs/screenshots/admin-user-edit-modal.png) | ![Mobile Staff Directory — Stacked card view of staff accounts with search bar, filter dropdowns, and responsive action controls on 375×667 viewport](docs/screenshots/admin-user-management-mobile-375x667.png) |
+| *Edit staff modal: secure role and department updates with audit trail logging* | *Mobile responsive layout: stacked staff cards optimized for compact screens* |
 
 ---
 
@@ -254,14 +261,28 @@ Every system action is logged with actor metadata, timestamps, and JSON diffs �
 
 ---
 
-### 🔧 n8n Workflow Engine — Visual Automation
+### 🔧 n8n Modular Workflows & Telegram Alerting
 
-The n8n self-hosted workflow engine handles leave routing and RAG orchestration via visual node-based pipelines:
+The n8n self-hosted workflow engine handles modular leave orchestration, department routing, HRIS sync, RAG execution, and automated error notifications:
 
-| Leave Approval Routing Workflow | RAG Chat Orchestration Workflow |
+#### Parent Orchestrator & Sub-Workflows
+
+| Leave Approval Parent Orchestrator | Leave Approver Routing Sub-Workflow |
 |:---:|:---:|
-| ![n8n Leave Approval Workflow — Active workflow with 89 executions: Webhook Trigger (POST /leave-approval) → Validate & Route Approver (JavaScript Department Classifier routing to hod.science@cempaka) → Respond to Webhook (Confirm Dispatch with pending_review status). Execution #1904 Success: Leave request lv_001 routed to Science & Mathematics HoD](docs/screenshots/n8n-workflow-leave-approval.png) | ![n8n RAG Chat Workflow — Active workflow with 142 executions: Webhook Trigger (POST /chat-query) → FastAPI Vector Retriever (Ollama + pgvector via authenticated HTTP call) → Respond to Webhook (Return JSON payload with answer and citations). Execution #4829 Success: 3 nodes executed in 242ms, 2 policy citations returned](docs/screenshots/n8n-workflow-rag-chat.png) |
-| *Leave routing: Webhook → Department Classifier → HoD Assignment → Dispatch Confirmation* | *RAG pipeline: Webhook → FastAPI Vector Retriever → JSON Response with citations* |
+| ![n8n Leave Approval Parent Orchestrator — Webhook trigger dispatching to Leave Routing and HRIS Sync modular sub-workflows with centralized error handling](docs/screenshots/n8n-workflow-parent-leave.png) | ![n8n Leave Approver Routing Sub-Workflow — Department classifier routing requests to designated Science & Math or Humanities HoD](docs/screenshots/n8n-workflow-leave-routing-child.png) |
+| *Parent workflow: validates payload and executes modular sub-workflows* | *Child sub-workflow: classifies department and routes to HoD* |
+
+| HRIS Payroll Sync Sub-Workflow | Policy RAG Chat Orchestration |
+|:---:|:---:|
+| ![n8n HRIS Sync Sub-Workflow — Working days calculator (Mon-Fri) and Mock HRIS payroll synchronization](docs/screenshots/n8n-workflow-hris-sync-child.png) | ![n8n RAG Chat Workflow — Webhook trigger calling FastAPI vector retriever and returning synthesized answer with citations](docs/screenshots/n8n-workflow-rag-chat.png) |
+| *Child sub-workflow: computes working days & updates payroll sync table* | *RAG workflow: webhook vector retrieval pipeline with grounded citations* |
+
+#### Automated Telegram Error Alerting
+
+| n8n Error Trigger & PII Redactor | Live Telegram Bot Notification |
+|:---:|:---:|
+| ![n8n Error Alert Workflow — Error Trigger capturing execution failures, redacting PII and credentials, and sending formatted Telegram message](docs/screenshots/n8n-workflow-error-alert.png) | ![Telegram Alert Bot Notification — Real-time smartphone alert showing workflow name, failing node, execution ID, timestamp, and sanitized error](docs/screenshots/telegram-error-alert.png) |
+| *Global error handler: catches failed nodes, scrubs personal data, and dispatches alert* | *Live Telegram alert: immediate operational notification with zero privacy leakage* |
 
 ---
 

@@ -76,6 +76,7 @@
   },
   "settings": {
     "saveExecutionProgress": true,
+    "callerPolicy": "any",
     "errorWorkflow": "ErrAlert00000001"
   }
 }

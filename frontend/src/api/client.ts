@@ -10,6 +10,25 @@ export interface UserProfile {
   is_active: boolean;
 }
 
+export interface UserItem extends UserProfile {
+  created_at: string;
+}
+
+export interface CreateUserPayload {
+  email: string;
+  full_name: string;
+  password: string;
+  role: 'admin' | 'hod' | 'teacher';
+  department: string;
+  is_active?: boolean;
+}
+
+export interface UpdateUserPayload {
+  full_name?: string;
+  role?: 'admin' | 'hod' | 'teacher';
+  department?: string;
+}
+
 export interface Citation {
   source_id: number;
   document_name: string;
@@ -333,4 +352,36 @@ export const api = {
 
   // System status (admin)
   getSystemStatus: () => request<SystemStatus>('/system/status'),
+
+  // User Management (Admin)
+  getUsers: (params?: { search?: string; role?: string; department?: string; is_active?: boolean }) => {
+    const query = new URLSearchParams();
+    if (params?.search) query.append('search', params.search);
+    if (params?.role) query.append('role', params.role);
+    if (params?.department) query.append('department', params.department);
+    if (params?.is_active !== undefined) query.append('is_active', String(params.is_active));
+    const qs = query.toString();
+    return request<UserItem[]>(`/users${qs ? `?${qs}` : ''}`);
+  },
+  getUser: (id: string) => request<UserItem>(`/users/${id}`),
+  createUser: (data: CreateUserPayload) =>
+    request<UserItem>('/users', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateUser: (id: string, data: UpdateUserPayload) =>
+    request<UserItem>(`/users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  toggleUserStatus: (id: string, is_active: boolean) =>
+    request<UserItem>(`/users/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ is_active }),
+    }),
+  resetUserPassword: (id: string, new_password: string) =>
+    request<{ message: string }>(`/users/${id}/reset-password`, {
+      method: 'POST',
+      body: JSON.stringify({ new_password }),
+    }),
 };
