@@ -24,6 +24,14 @@ School administrators and operations staff spend dozens of hours every week acti
 
 ---
 
+## 📈 Outcomes
+
+- Architected an RM0 self-hosted school operations platform pairing local RAG (Ollama qwen2.5:7b, 768-dim nomic-embed-text, pgvector HNSW) with verbatim page-level citations for staff policy questions.
+- Routed teacher leave requests to department heads through an n8n parent orchestrator and 2 sub-workflows (approver routing, HRIS payroll sync), with a FastAPI fallback that kept policy answers available when n8n went offline.
+- Converted natural-language leave requests into pre-filled forms by extracting 5 fields (leave type, start date, end date, reason, covering teacher) directly in the chat stream.
+- Secured 3 staff roles (teacher, HoD, admin) with JWT and bcrypt, logged every approval to an append-only audit trail, and verified behavior with 83+ pytest tests across 14 modules.
+- Redacted personal and medical data from n8n failure alerts before sending them to Telegram, backed by live health probes (PostgreSQL 3 ms, Ollama 12 ms, n8n webhook 18 ms) and 6 architecture decision records.
+
 ---
 
 ## 🏛️ System Architecture
